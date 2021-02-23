@@ -11,7 +11,7 @@ LVM (Logical Volume Manager)  permite administradores criarem meta dispositivos 
 
 Encriptaremos a unidade central, e por sua vez todas as subunidades LVM  e  subvolumes btrfs também estarão encriptadas (menos a partição boor e efi)
 
-![](file:///home/orfeu/Pictures/Diagrama-hds.png)
+![](https://github.com/flashlan/GentooHerdenedLuksLvmBtrfs/blob/main/Diagrama-hds.png)
 
 _________
 Assumindo que que a instalação será feita a partir de um ambiente linux:
