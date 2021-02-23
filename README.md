@@ -21,11 +21,11 @@ Download minimal cd install:
 <https://www.gentoo.org/downloads/>
 
 Grave  a imagem iso para o pendrive:
-	root #dd if=install-amd64-minimal-20210221T214504Z.iso of=/dev/sdb bs=4M
+```root #dd if=install-amd64-minimal-20210221T214504Z.iso of=/dev/sdb bs=4M```
 
 
 Após dar boot com o live-usb e entrar no terminal use blkid para pegar o nome e UUIDs das unidades
-	blkid
+    blkid
 
 (sda = unidade alvo de instalação no nosso caso)
 
@@ -35,19 +35,19 @@ Após dar boot com o live-usb e entrar no terminal use blkid para pegar o nome e
 
 Vamos criar uma unidade efi de 100Mb, uma segunda unidade para os arquivos de boot (não criptografados) e o restante dos disco criaremos uma unidade lvm para o restante das partições:
 OBS:eu deixo 1,5gb para poder usar vários kernels, 256MiB mínimo
-	parted -a optimal /dev/sda
-	mklabel gpt
-	mkpart primary 1MiB 100MiB
-	name 1 efi
-	set 1 esp on
-	mkpart primary 100MiB 1600MiB
-	name 2 boot
-	set 2 boot on
-	mkpart primary 1600MiB 100% 
-	name 3 data-encrypted
-	set 3 lvm on
-	print
-	quit 
+    ```parted -a optimal /dev/sda```
+    ```mklabel gpt```
+	```mkpart primary 1MiB 100MiB```
+	```name 1 efi```
+	```set 1 esp on```
+	```mkpart primary 100MiB 1600MiB```
+	```name 2 boot```
+	```set 2 boot on```
+	```mkpart primary 1600MiB 100% ```
+	```name 3 data-encrypted```
+	```set 3 lvm on```
+	```print```
+	```quit ```
 
 
 Critografar nossa unidade:
