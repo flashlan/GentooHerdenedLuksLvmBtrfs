@@ -13,7 +13,7 @@ Encriptaremos a unidade central, e por sua vez todas as subunidades LVM  e  subv
 
 ![](file:///home/orfeu/Pictures/Diagrama-hds.png)
 
-
+_________
 Assumindo que que a instalação será feita a partir de um ambiente linux:
 
 Download minimal cd install:
@@ -35,6 +35,7 @@ Após dar boot com o live-usb e entrar no terminal use blkid para pegar o nome e
 ### Particionamento
 
 Vamos criar uma unidade efi de 100Mb, uma segunda unidade para os arquivos de boot (não criptografados) e o restante dos disco criaremos uma unidade lvm para o restante das partições:
+
 OBS:eu deixo 1,5gb para poder usar vários kernels, 256MiB mínimo
 
     parted -a optimal /dev/sda
@@ -123,8 +124,8 @@ Montar o Sistema para chroot
 	mount --make-rslave /mnt/gentoo/dev
 	chroot /mnt/gentoo /bin/bash
 
-
-###chroot
+__________
+###### chroot
 
 	source /etc/profile
 	export PS1="(chroot) $PS1"
@@ -147,29 +148,36 @@ Povoar o sistema de arquivos
 	eselect profile list
 	eselect profile <num> # selecione hardened
 	$EDITOR /etc/portage/make.conf
-
+__________
 
 **``USE_FLAGS=``**
+
 Básicas e recomendadas:"bash-completion hardened -jit vim-syntax xattr"
+
 Desktop:"alsa dbus X pulseaudio xft" 
+
 **``COMMON_FLAGS=``"-02 -march=native -mtune=native -pipe"**
+
 **``MAKEOPTS=``"-jN"** 
+
 (Onde "N" é o número de cores do seu processador)
 
 Após configurar o sistema:
 
 	emerge -avuDN @world
 
-
+__________
 Fuso-horário
 
 	echo "America/Sao_Paulo" > /etc/timezone
 	emerge --config sys-libs/timezone-data
 	$EDITOR /etc/locale.gen 
+________
 
-´´pt_BR UTF-8
-  C.UTF8 UTF-8´´
-	
+    pt_BR UTF-8
+    C.UTF8 UTF-8
+_________
+
 	locale-gen
 	locale -a
 	eslect locale list
@@ -208,7 +216,7 @@ Adicionar um usuário (grupos podem ser wheel, kvm, etc..)
 	
 	$EDITOR /etc/fstab #substitua UUIDs usando blkid
 
-Modelo de fstab com todas as unidades finais (ps10 é para usar chave de descriptografia no pendrive e não precisar digitar senha toda vez que liga, use tmpfs caso use ssd ou nvme, para montar a partição /tmp na memoria ram, aumentando assim a vida útil do disco, pela questão da messiva escrita de dados que ocoree nessa partição, a pasta [/data](file:///home/orfeu/git/MyTiddly/ZimGentoo/data) esta localizada em outro hdd, servindo de armazenamento exclusivo para receber os backups da pasta snapshots).
+Modelo de fstab com todas as unidades finais (ps10 é para usar chave de descriptografia no pendrive e não precisar digitar senha toda vez que liga, use tmpfs caso use ssd ou nvme, para montar a partição /tmp na memoria ram, aumentando assim a vida útil do disco, pela questão da escrita massiva de dados que ocorre nessa partição, e a pasta /data, localizada em outro hdd e  servindo de armazenamento exclusivo para receber os backups da pasta snapshots).
 
 
 	UUID=01b9e6e2...         /boot        ext4    noauto,noatime                 		     1 2
@@ -221,7 +229,7 @@ Modelo de fstab com todas as unidades finais (ps10 é para usar chave de descrip
 	tmpfs                    /tmp         tmpfs   rw,nosuid,noatime,nodev,size=4G,mode=1777  0 0
 	#/dev/cdrom              /mnt/cdrom   auto   noauto,ro                                   0 0
 
-
+_________
 
 	emerge -av app-portage/gentoolkit
 	emerge -av app-admin/doas # substituto para o sudo
@@ -235,8 +243,11 @@ Modelo de fstab com todas as unidades finais (ps10 é para usar chave de descrip
 ##### Configurar a rede
 
 Caso o método escolhido seja por ifrc, mais simples e usando cabo de rede apenas:
+
 ***OBS: ***
+
 ***touch /etc/udev/rules.d/80-net-name-slot.rules***
+
 ***para renomear sua interfaces de redes para eth0, wlan0, etc...)***
 
 
@@ -249,6 +260,7 @@ Caso o método escolhido seja por ifrc, mais simples e usando cabo de rede apena
 TODO: network manager
 
 ##### Opcional
+
 Caso opte por interface gráfica:
 
 	emerge -av x11-wm/openbox
@@ -277,10 +289,15 @@ Baixe o códifo fonte e adicione algumas use flags necessárias (euse)
 
 
 *MENUCONFIG="yes"*
+
 *LVM="yes"*
+
 *LUKS="yes"*
+
 *BTRFS="yes"*
+
 *FIRMWARE="yes"*
+
 *FIRMWARE_SRC="/lib/firmware"*
 
 	genkernel all
@@ -311,6 +328,7 @@ Ative suporte no kernel marcando com "*" os seguintes itens:
 	$EDITOR /etc/default/grub
 
 insert "dolvm dobtrfs root=UUID=<datavg-root-uuid>" em GRUB_CMD_LINE_DEFAULT=""
+	
 ~~(na minha configuração tambem precisei configurar "root=" como "real_root="  após  o grub gerar o grub.cfg)~~
 	
 	
