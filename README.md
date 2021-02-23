@@ -1,5 +1,5 @@
 # GentooHerdenedLuksLvmBtrfs
-Instalação Gentoo hardened com incriptação Luks, Lvm e Btrfs em subvolumes
+Instalação Linux Gentoo hardened com incriptação Luks, Lvm e Btrfs em subvolumes
 
 
 # Instalação Gentoo: Hardened, Lvm, Encriptação Luks e Btrfs Subvolumes
