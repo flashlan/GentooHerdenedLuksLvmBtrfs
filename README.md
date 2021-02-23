@@ -345,6 +345,10 @@ Finalizar
 
 
 
+Pós-instalação: firewall iptables:
+
+    https://github.com/flashlan/iptablesOTF
+
 
 
 
