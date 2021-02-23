@@ -14,14 +14,15 @@ Encriptaremos a unidade central, e por sua vez todas as subunidades LVM  e  subv
 ![](file:///home/orfeu/Pictures/Diagrama-hds.png)
 
 
-
 Assumindo que que a instalação será feita a partir de um ambiente linux:
 
 Download minimal cd install:
-<https://www.gentoo.org/downloads/>
+
+    <https://www.gentoo.org/downloads/>
 
 Grave  a imagem iso para o pendrive:
-```root #dd if=install-amd64-minimal-20210221T214504Z.iso of=/dev/sdb bs=4M```
+
+    root #dd if=install-amd64-minimal-20210221T214504Z.iso of=/dev/sdb bs=4M
 
 
 Após dar boot com o live-usb e entrar no terminal use blkid para pegar o nome e UUIDs das unidades
@@ -35,30 +36,34 @@ Após dar boot com o live-usb e entrar no terminal use blkid para pegar o nome e
 
 Vamos criar uma unidade efi de 100Mb, uma segunda unidade para os arquivos de boot (não criptografados) e o restante dos disco criaremos uma unidade lvm para o restante das partições:
 OBS:eu deixo 1,5gb para poder usar vários kernels, 256MiB mínimo
-    ```parted -a optimal /dev/sda```
-    ```mklabel gpt```
-	```mkpart primary 1MiB 100MiB```
-	```name 1 efi```
-	```set 1 esp on```
-	```mkpart primary 100MiB 1600MiB```
-	```name 2 boot```
-	```set 2 boot on```
-	```mkpart primary 1600MiB 100% ```
-	```name 3 data-encrypted```
-	```set 3 lvm on```
-	```print```
-	```quit ```
+
+    parted -a optimal /dev/sda
+    mklabel gpt
+    mkpart primary 1MiB 100MiB
+    name 1 efi
+    set 1 esp on`
+    mkpart primary 100MiB 1600MiB
+    name 2 boot
+    set 2 boot on
+    mkpart primary 1600MiB 100% 
+    name 3 data-encrypted
+    set 3 lvm on
+    print
+    quit 
 
 
 Critografar nossa unidade:
+
 	cryptsetup -s 512 --use-random luksFormat /dev/sda3
 
 
 Abriremos ela em seguida:
+
 	cryptsetup luksOpen /dev/sda3 data-decrypted
 
 
 Com unidade cryptografada aberta, criaremos, respectivamente, os grupos físicos (Physical Groups), grupos de volumes (Volume-Groups)  e os volumes lógicos (logical Volumes):
+
 	pvcreate /dev/mapper/data-decrypted
 	vgcreate datavg /dev/mapper/data-decrypted
 	lvcreate -L 15GB  -n swap datavg
@@ -66,12 +71,14 @@ Com unidade cryptografada aberta, criaremos, respectivamente, os grupos físicos
 
 
 Formatar as partições:
+
 	mkfs.fat -F 32 /dev/sda1
 	mkfs.ext4 -L boot /dev/sda2
 	mkfs.btrfs -L root /dev/mapper/datavg-root
 
 
 Criar sub volumes btrfs para conter a rais do sistema "/" no interior da pasta rootfs e  a pasta "/home", ambos como subdiretóios da pasta "@", além de uma pasta snapshots, a qual virá a ser utilizada posteriormente para realização de backups:
+
 	mount /dev/mapper/datavg-root /mnt/gentoo
 	mkdir /@
 	btrfs subvolume create /@/rootfs
@@ -83,6 +90,7 @@ Criar sub volumes btrfs para conter a rais do sistema "/" no interior da pasta r
 ### Chroot
 
 Montar o sistema. criar swap e entrar na raiz:
+
 	mount /dev/mapper/datavg-root -o subvol=/@/rootfs /mnt/gentoo
 	mkswap /dev/mapper/datavg-swap
 	swapon  /dev/mapper/datavg-swap
@@ -90,10 +98,12 @@ Montar o sistema. criar swap e entrar na raiz:
 
 
 Sincronize o relógio:
+
 	ntpd -qg
 
 
 Instalação stage3
+
 	curl --list-only ftp://gentoo.osuosl.org/pub/gentoo/releases/amd64/autobuilds/current-stage3-amd64-hardened
 
 	wget ftp://gentoo.osuosl.org/pub/gentoo/releases/amd64/autobuilds/current-stage3-amd64-hardened/current-stage3-amd64-hardened-20210221T214504Z.tar.xz
@@ -105,6 +115,7 @@ Instalação stage3
 
 
 Montar o Sistema para chroot
+
 	mount --types proc /proc /mnt/gentoo/proc
 	mount --rbind /sys /mnt/gentoo/sys
 	mount --make-rslave /mnt/gentoo/sys
@@ -113,12 +124,14 @@ Montar o Sistema para chroot
 	chroot /mnt/gentoo /bin/bash
 
 
-``chroot``
+###chroot
+
 	source /etc/profile
 	export PS1="(chroot) $PS1"
 
 
 Montar as partições restantes
+
 	mkdir -f /home
 	mkdir /boot
 	mount /dev/sda2 /boot
@@ -128,6 +141,7 @@ Montar as partições restantes
 
 
 Povoar o sistema de arquivos
+
 	emerge-webrsync
 	emerge --sync
 	eselect profile list
@@ -143,16 +157,19 @@ Desktop:"alsa dbus X pulseaudio xft"
 (Onde "N" é o número de cores do seu processador)
 
 Após configurar o sistema:
+
 	emerge -avuDN @world
 
 
 Fuso-horário
+
 	echo "America/Sao_Paulo" > /etc/timezone
 	emerge --config sys-libs/timezone-data
 	$EDITOR /etc/locale.gen 
 
-	pt_BR UTF-8
-	C.UTF8 UTF-8
+´´pt_BR UTF-8
+  C.UTF8 UTF-8´´
+	
 	locale-gen
 	locale -a
 	eslect locale list
@@ -163,15 +180,18 @@ Fuso-horário
 
 
 Hostname
+
 	$EDITOR /etc/conf.d/hostname
 	$EDITOR /etc/hosts
 
 
 Definir a senha root
+
 	passwd 
 
 
 Adicionar um usuário (grupos podem ser wheel, kvm, etc..)
+
 	useradd -g users -G <group1>,<group2> -m <nome de usuário> 
 	passwd <nome de usuário>
 
@@ -189,6 +209,8 @@ Adicionar um usuário (grupos podem ser wheel, kvm, etc..)
 	$EDITOR /etc/fstab #substitua UUIDs usando blkid
 
 Modelo de fstab com todas as unidades finais (ps10 é para usar chave de descriptografia no pendrive e não precisar digitar senha toda vez que liga, use tmpfs caso use ssd ou nvme, para montar a partição /tmp na memoria ram, aumentando assim a vida útil do disco, pela questão da messiva escrita de dados que ocoree nessa partição, a pasta [/data](file:///home/orfeu/git/MyTiddly/ZimGentoo/data) esta localizada em outro hdd, servindo de armazenamento exclusivo para receber os backups da pasta snapshots).
+
+
 	UUID=01b9e6e2...         /boot        ext4    noauto,noatime                 		     1 2
 	UUID=01b9e6e2...         /            btrfs   subvol=/@/rootfs,ssd,noatime   		     0 1
 	/dev/mapper/datavg-root  /home        btrfs   subvol=/@/home,ssd,noatime     		     0 2
@@ -198,6 +220,8 @@ Modelo de fstab com todas as unidades finais (ps10 é para usar chave de descrip
 	/dev/mapper/datavg-root  /mnt/raiz    btrfs   noauto,ssd,noatime			 		     0 2
 	tmpfs                    /tmp         tmpfs   rw,nosuid,noatime,nodev,size=4G,mode=1777  0 0
 	#/dev/cdrom              /mnt/cdrom   auto   noauto,ro                                   0 0
+
+
 
 	emerge -av app-portage/gentoolkit
 	emerge -av app-admin/doas # substituto para o sudo
@@ -209,10 +233,13 @@ Modelo de fstab com todas as unidades finais (ps10 é para usar chave de descrip
 
 
 ##### Configurar a rede
+
 Caso o método escolhido seja por ifrc, mais simples e usando cabo de rede apenas:
 ***OBS: ***
 ***touch /etc/udev/rules.d/80-net-name-slot.rules***
 ***para renomear sua interfaces de redes para eth0, wlan0, etc...)***
+
+
 	emerge -av net-misc/netifrc
 	echo 'config_eth0="dhcp"' >> /etc/conf.d/net
 	ln -s /etc/init.d/net.lo /etc/init.d/net.eth0
@@ -223,6 +250,7 @@ TODO: network manager
 
 ##### Opcional
 Caso opte por interface gráfica:
+
 	emerge -av x11-wm/openbox
 	emerge -av x11-base/xorg-server
 	emerge -av x11-misc/tint2
@@ -231,12 +259,14 @@ Caso opte por interface gráfica:
 
 
 Utilitários
+
 	emerge -av vim tmux mc
 
 
 
 ##### Compile Kernel
 Baixe o códifo fonte e adicione algumas use flags necessárias (euse)
+
 	emerge -av sys-kernel/gentoo-sources sys-kernel/linux-firmware
 	euse -p sys-apps/util-linux -E static-libs
 	euse -p sys-kernel/genkernel -E  cryptsetup
@@ -270,6 +300,7 @@ Ative suporte no kernel marcando com "*" os seguintes itens:
 
 
 ##### Grub
+
 	ls /boot/
 	echo 'GRUB_PLATFORMS="efi-64"'>> /etc/portage/make.conf
 	euse -p sys-boot/grub -E mount device-mapper
@@ -281,10 +312,13 @@ Ative suporte no kernel marcando com "*" os seguintes itens:
 
 insert "dolvm dobtrfs root=UUID=<datavg-root-uuid>" em GRUB_CMD_LINE_DEFAULT=""
 ~~(na minha configuração tambem precisei configurar "root=" como "real_root="  após  o grub gerar o grub.cfg)~~
+	
+	
 	grub-mkconfig -o /boot/grub/grub/cfg
 
 
 Finalizar
+
 	exit
 	cd 
 	umount -l /mn/tgentoo/dev{/shm,/pts,}
